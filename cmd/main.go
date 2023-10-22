@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/gofiber/fiber/v2"
@@ -45,6 +46,8 @@ func main() {
 			"message": "Route not found",
 		})
 	})
+
+	fmt.Println("Checking the git cmds for branchs")
 
 	log.Fatal(app.Listen(config.Port))
 }
