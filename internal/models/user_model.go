@@ -1,7 +1,5 @@
 package models
 
-import "time"
-
 type User struct {
 	Name           string
 	Email          string
@@ -14,5 +12,4 @@ type User struct {
 	UserRole       string
 	TokenVersion   int
 	Score          int
-	Submission     time.Time
 }

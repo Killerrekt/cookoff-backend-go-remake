@@ -7,6 +7,7 @@ import (
 	"github.com/CodeChefVIT/cookoff-backend/config"
 	"github.com/CodeChefVIT/cookoff-backend/internal/database"
 	"github.com/CodeChefVIT/cookoff-backend/internal/models"
+	"github.com/CodeChefVIT/cookoff-backend/internal/routes"
 	"github.com/CodeChefVIT/cookoff-backend/internal/utils"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
@@ -32,11 +33,11 @@ func main() {
 
 	app.Validator = &utils.CustomValidator{Validator: validator.New()}
 
+	routes.AuthRoutes(app)
 	app.GET("/ping", func(c echo.Context) error {
 		return c.JSON(http.StatusAccepted, models.Response{
 			Message: "Pong",
 			Status:  true,
-			Data:    "YOOOO TIME TO DO THIS",
 		})
 	})
 

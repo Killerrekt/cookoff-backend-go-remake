@@ -3,6 +3,7 @@ package controller
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -15,8 +16,8 @@ import (
 
 func Login(c echo.Context) error {
 	var req struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
+		Email    string `json:"email" validate:"required"`
+		Password string `json:"password" validate:"required"`
 	}
 
 	var res struct {
@@ -83,9 +84,66 @@ func Login(c echo.Context) error {
 		})
 	}
 
+	user.RefreshToken = res.RefreshToken
+	err = service.UpdateUserTokenDetails(user)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, models.Response{
+			Message: "Failed to save the token details(DB error : " + err.Error() + ")",
+			Status:  false,
+			Data:    res,
+		})
+	}
+
 	return c.JSON(http.StatusAccepted, models.Response{
 		Message: "User Successfully Logged in",
 		Status:  true,
 		Data:    res,
 	})
+}
+
+func SignUp(c echo.Context) error {
+	var req struct {
+		Name     string `json:"name" validate:"required"`
+		Email    string `json:"email" validate:"required"`
+		RegNo    string `json:"reg_no" validate:"required"`
+		Password string `json:"password" validate:"required"`
+	}
+
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, models.Response{
+			Message: "Failed to parse the data",
+			Status:  false,
+		})
+	}
+
+	fmt.Println(req)
+
+	if err := c.Validate(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, models.Response{
+			Message: "Didn't pass all the required fields",
+			Status:  false,
+		})
+	}
+
+	password, err := bcrypt.GenerateFromPassword([]byte(req.Password), 10)
+	if err != nil {
+		return c.JSON(http.StatusFailedDependency, models.Response{
+			Message: "Failed to hash the password",
+			Status:  false,
+		})
+	}
+
+	err = service.CreateUser(req.Name, req.Email, string(password), req.RegNo)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, models.Response{
+			Message: "DB error : " + err.Error(),
+			Status:  false,
+		})
+	}
+
+	return c.JSON(http.StatusAccepted, models.Response{
+		Message: "User has been created successfully",
+		Status:  true,
+	})
+
 }

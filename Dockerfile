@@ -13,8 +13,8 @@ ADD go.sum .
 RUN go mod download
 ADD . .
 
-RUN go build -o ./bin/cookoff-backend ./cmd/main.go
+RUN go install -mod=mod github.com/githubnemo/CompileDaemon
 
 EXPOSE 8080
 
-CMD ["./bin/cookoff-backend"]
+ENTRYPOINT CompileDaemon --build="go build cmd/main.go" --command=./main
