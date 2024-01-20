@@ -33,9 +33,10 @@ func main() {
 	app.Validator = &utils.CustomValidator{Validator: validator.New()}
 
 	app.GET("/ping", func(c echo.Context) error {
-		return c.JSON(http.StatusAccepted, models.Response_str_bool{
+		return c.JSON(http.StatusAccepted, models.Response{
 			Message: "Pong",
 			Status:  true,
+			Data:    "YOOOO TIME TO DO THIS",
 		})
 	})
 
