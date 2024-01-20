@@ -1,31 +1,26 @@
 package database
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
-	"os"
 
 	config "github.com/CodeChefVIT/cookoff-backend/config"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-var DB *gorm.DB
+var DB *sql.DB
 
 func ConnectDB(config *config.Config) {
 	var err error
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable", config.DBHost, config.DBUserName, config.DBUserPassword, config.DBName, config.DBPort)
 
-	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	DB, err = sql.Open("pgx", dsn)
+	fmt.Println(dsn)
 
 	if err != nil {
-		log.Fatal("Failed to connect to the Database! \n", err.Error())
-		os.Exit(1)
+		log.Fatalln("Failed to connect to the Database! \n", err.Error())
 	}
-
-	DB.Exec("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\"")
-	DB.Logger = logger.Default.LogMode(logger.Info)
 
 	log.Println("🚀 Connected Successfully to the Database")
 }

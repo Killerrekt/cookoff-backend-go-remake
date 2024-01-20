@@ -4,25 +4,26 @@ services:
     image: postgres:latest
     container_name: db
     ports:
-      - '6500:5432'
+      - '5000:5432'
     volumes:
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./postgres_data:/var/lib/postgresql/data
     env_file:
       - .env
   api:
     build: .
     ports:
-      - "8080"
+      - "8000:8080"
     env_file:
       - .env
     restart: on-failure
-  nginx:
-    build: ./nginx
-    ports:
-      - "80:80"
-    depends_on:
-      - api
-    restart: always
+  #nginx:
+    #build: ./nginx
+    #ports:
+    #  - "80:80"
+    #depends_on:
+    #  - api
+    #restart: always
 
 volumes:
   progresDB:

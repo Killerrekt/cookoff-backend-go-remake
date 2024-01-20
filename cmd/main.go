@@ -1,53 +1,43 @@
 package main
 
 import (
-	"fmt"
 	"log"
+	"net/http"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/logger"
-
-	config "github.com/CodeChefVIT/cookoff-backend/config"
+	"github.com/CodeChefVIT/cookoff-backend/config"
 	"github.com/CodeChefVIT/cookoff-backend/internal/database"
+	"github.com/CodeChefVIT/cookoff-backend/internal/models"
+	"github.com/CodeChefVIT/cookoff-backend/internal/utils"
+	"github.com/go-playground/validator/v10"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
-	app := fiber.New()
+	app := echo.New()
 
 	config, err := config.LoadConfig(".")
 	if err != nil {
-		log.Fatalln("Failed to load environment variables! \n", err.Error())
+		log.Fatalln("Failed to load enviorment variables! \n", err.Error())
 	}
-
 	database.ConnectDB(&config)
-	database.RunMigrations(database.DB)
-
-	app.Use(logger.New())
-
-	app.Use(cors.New(cors.Config{
-		AllowOrigins:     config.ClientOrigin,
-		AllowHeaders:     "Origin, Content-Type, Accept",
-		AllowMethods:     "GET, POST, PATCH, DELETE",
+	app.Use(middleware.Logger())
+	app.Use(middleware.Recover())
+	app.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins:     []string{config.ClientOrigin},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		AllowMethods:     []string{"GET", "POST", "PATCH", "DELETE"},
 		AllowCredentials: true,
 	}))
-	// routes.AuthRoutes(apiGroup)
 
-	app.Get("/ping", func(c *fiber.Ctx) error {
-		return c.Status(200).JSON(fiber.Map{
-			"message": "pong",
-			"status":  "Backend up and running",
+	app.Validator = &utils.CustomValidator{Validator: validator.New()}
+
+	app.GET("/ping", func(c echo.Context) error {
+		return c.JSON(http.StatusAccepted, models.Response_str_bool{
+			Message: "Pong",
+			Status:  true,
 		})
 	})
 
-	app.Use(func(c *fiber.Ctx) error {
-		return c.Status(404).JSON(fiber.Map{
-			"status":  "error",
-			"message": "Route not found",
-		})
-	})
-
-	fmt.Println("Checking the git cmds for branchs")
-
-	log.Fatal(app.Listen(config.Port))
+	app.Logger.Fatal(app.Start(config.Port))
 }
